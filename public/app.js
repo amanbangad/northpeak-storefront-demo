@@ -119,15 +119,28 @@ async function placeOrder() {
     showError('Your cart is empty.');
     return;
   }
-  const res = await fetch('/api/checkout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items }),
-  });
-  showToast('Order confirmed! Thank you for shopping Northpeak.');
-  cart = {};
-  renderCart();
-  loadOrders();
+  const button = $('place-order');
+  button.disabled = true;
+  try {
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      showError('We could not place your order (' + (data.error || 'error ' + res.status) + '). You have not been charged. Please try again.');
+      return;
+    }
+    showToast('Order confirmed! Thank you for shopping Northpeak.');
+    cart = {};
+    renderCart();
+    loadOrders();
+  } catch (err) {
+    showError('Network problem while placing your order. Please try again.');
+  } finally {
+    button.disabled = false;
+  }
 }
 
 $('place-order').addEventListener('click', placeOrder);
