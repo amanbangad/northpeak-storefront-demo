@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Northpeak Sportswear</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast hidden"></div>
+  <div id="error-banner" class="error-banner hidden"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">N</span>
+      <span class="brand-name">Northpeak</span>
+    </div>
+    <nav class="nav">
+      <a href="/">Home</a>
+    </nav>
+  </header>
+
+  <main class="content">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>New arrivals</h2>
+        <span class="muted" id="product-count"></span>
+      </div>
+      <div id="product-grid" class="grid"></div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
