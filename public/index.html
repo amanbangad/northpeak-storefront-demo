@@ -20,7 +20,16 @@
     </nav>
   </header>
 
-  <main class="content">
+  <section class="hero">
+    <div>
+      <p class="hero-kicker">Limited time</p>
+      <h2>SUMMIT SALE</h2>
+      <p class="hero-claim">50% OFF SITEWIDE</p>
+      <a class="btn light" href="/drops/summit-sale">Shop the drop</a>
+    </div>
+  </section>
+
+  <main class="content shop">
     <section class="panel">
       <div class="panel-head">
         <h2>New arrivals</h2>
@@ -28,6 +37,25 @@
       </div>
       <div id="product-grid" class="grid"></div>
     </section>
+
+    <aside class="side">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Your cart</h2>
+        </div>
+        <div id="cart-lines"></div>
+        <div id="cart-summary" class="cart-summary"></div>
+        <button id="place-order" class="btn primary wide">Place order</button>
+        <p id="cart-note" class="status-line"></p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Recent orders</h2>
+        </div>
+        <div id="orders-list" class="orders-list"></div>
+      </section>
+    </aside>
   </main>
 
   <script src="/app.js"></script>
