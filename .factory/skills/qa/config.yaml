@@ -1,0 +1,37 @@
+project: Northpeak Storefront
+
+environments:
+  ci:
+    url: http://localhost:4620
+    start_command: node server.js
+    restrictions:
+      - ephemeral CI environment
+      - safe to create test orders
+default_target: ci
+
+auth:
+  method: none
+
+personas:
+  - name: shopper
+    test_focus:
+      - campaign landing
+      - cart
+      - checkout
+
+apps:
+  web:
+    path_patterns:
+      - "public/**"
+      - "server.js"
+      - "lib/**"
+    skill: qa-web
+    test_tool: agent-browser
+
+critical_flows:
+  - Campaign banner matches the campaign config (discount claim and link)
+  - Add to cart applies the configured discount
+  - Checkout is safe against double submit (no duplicate orders)
+  - Checkout failure surfaces an error, never a false confirmation
+
+failure_learning: suggest_in_report

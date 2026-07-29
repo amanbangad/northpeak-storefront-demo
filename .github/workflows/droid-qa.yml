@@ -1,0 +1,104 @@
+name: Droid QA
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: droid-qa-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  qa:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure base ref for diff
+        run: git fetch origin main:refs/remotes/origin/main || true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+        continue-on-error: true
+
+      - name: Install Droid CLI
+        run: |
+          curl -fsSL https://app.factory.ai/cli | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.factory/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Droid CLI
+        run: |
+          export PATH="$HOME/.local/bin:$HOME/.factory/bin:$PATH"
+          which droid || ls -la "$HOME/.local/bin" "$HOME/.factory/bin" 2>/dev/null || true
+          droid --version || true
+
+      - name: Start storefront
+        run: |
+          node server.js > server.log 2>&1 &
+          echo "APP_PID=$!" >> "$GITHUB_ENV"
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:4620/api/campaign > /dev/null; then
+              echo "storefront is up"; break
+            fi
+            sleep 1
+          done
+          curl -sf http://localhost:4620/api/campaign || (echo "storefront failed to start"; cat server.log; exit 1)
+
+      - name: Run behavioral QA
+        env:
+          FACTORY_API_KEY: ${{ secrets.FACTORY_API_KEY }}
+          CI: "true"
+        run: |
+          export PATH="$HOME/.local/bin:$HOME/.factory/bin:$PATH"
+          mkdir -p qa-evidence
+          droid exec --auto high "Run behavioral QA on the Northpeak storefront running at http://localhost:4620. Use the qa skill at .factory/skills/qa/SKILL.md and the qa-web sub-skill at .factory/skills/qa-web/SKILL.md. Test all four critical flows regardless of the diff (campaign creative integrity, campaign CTA link resolves, checkout double-submit safety, checkout failure handling). Use agent-browser for screenshots if available, otherwise verify the same behavior over HTTP with curl. Save all evidence under qa-evidence/ and write the final report to qa-report.md using .factory/skills/qa/REPORT-TEMPLATE.md. Do not modify any application code."
+
+      - name: Show report in logs
+        if: always()
+        run: |
+          echo "===== qa-report.md ====="
+          cat qa-report.md 2>/dev/null || echo "(no qa-report.md produced)"
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-evidence
+          path: |
+            qa-evidence/
+            qa-report.md
+            server.log
+          if-no-files-found: warn
+
+      - name: Post QA report to PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let report = '';
+            try { report = fs.readFileSync('qa-report.md', 'utf8'); } catch (e) {}
+            const body = report && report.trim().length
+              ? `## Droid QA report\n\n${report}\n\n_Evidence (screenshots) attached as the \`qa-evidence\` build artifact._`
+              : `## Droid QA report\n\nThe QA run did not produce a report file. See the workflow logs and the \`qa-evidence\` artifact for details.`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
