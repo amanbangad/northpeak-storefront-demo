@@ -66,7 +66,7 @@ jobs:
         run: |
           export PATH="$HOME/.local/bin:$HOME/.factory/bin:$PATH"
           mkdir -p qa-evidence
-          droid exec --auto high "Run behavioral QA on the Northpeak storefront running at http://localhost:4620. Use the qa skill at .factory/skills/qa/SKILL.md and the qa-web sub-skill at .factory/skills/qa-web/SKILL.md. Test all four critical flows regardless of the diff (campaign creative integrity, campaign CTA link resolves, checkout double-submit safety, checkout failure handling). Use agent-browser for screenshots if available, otherwise verify the same behavior over HTTP with curl. Save all evidence under qa-evidence/ and write the final report to qa-report.md using .factory/skills/qa/REPORT-TEMPLATE.md. Do not modify any application code."
+          droid exec --auto high "Run behavioral QA on the Northpeak storefront running at http://localhost:4620. Use the qa skill at .factory/skills/qa/SKILL.md: analyze the PR diff with 'git diff --name-only origin/main...HEAD', map the changed files to apps via config.yaml path_patterns, and run only the affected app's flows. For web changes (public/**, server.js, lib/**), follow the qa-web sub-skill at .factory/skills/qa-web/SKILL.md and run its critical flows. Use agent-browser for screenshots if available, otherwise verify the same behavior over HTTP with curl. Save all evidence under qa-evidence/ and write the final report to qa-report.md using .factory/skills/qa/REPORT-TEMPLATE.md. Do not modify any application code."
 
       - name: Show report in logs
         if: always()
