@@ -102,3 +102,17 @@ jobs:
               issue_number: context.issue.number,
               body,
             });
+
+      - name: Enforce QA verdict
+        if: always()
+        run: |
+          test -f qa-report.md || { echo "No qa-report.md produced; failing QA check."; exit 1; }
+          verdict="$(grep -iE 'overall' qa-report.md | head -n1)"
+          echo "QA verdict line: $verdict"
+          if echo "$verdict" | grep -iqE 'fail|blocked'; then
+            echo "Behavioral QA did not pass; failing the check so it is visible on the PR (advisory, non-blocking)."; exit 1
+          fi
+          if echo "$verdict" | grep -iq 'pass'; then
+            echo "Behavioral QA passed."; exit 0
+          fi
+          echo "Could not determine QA verdict from qa-report.md; failing."; exit 1
