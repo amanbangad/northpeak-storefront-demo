@@ -93,6 +93,32 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { orders: orders.allOrders() });
     }
 
+    if (method === 'POST' && route === '/api/checkout') {
+      const body = await readBody(req);
+      const items = Array.isArray(body.items) ? body.items : [];
+      if (items.length === 0) return json(res, 400, { error: 'empty_cart' });
+      if (failMode) return json(res, 500, { error: 'payments_unavailable' });
+      let subtotalCents = 0;
+      const lineItems = [];
+      for (const it of items) {
+        const product = products.find((p) => p.sku === it.sku);
+        if (!product) return json(res, 400, { error: 'unknown_sku', sku: it.sku });
+        const qty = Math.max(1, Number(it.qty) || 1);
+        subtotalCents += product.priceCents * qty;
+        lineItems.push({ sku: product.sku, name: product.name, priceCents: product.priceCents, qty });
+      }
+      const discountCents = campaign.active ? Math.round((subtotalCents * campaign.discountPct) / 100) : 0;
+      const totalCents = subtotalCents - discountCents;
+      const result = orders.createOrder({
+        items: lineItems,
+        subtotalCents,
+        discountCents,
+        totalCents,
+        campaignId: campaign.active ? campaign.id : null,
+      });
+      return json(res, 201, { ok: true, order: result.order });
+    }
+
     // Campaign landing route is registered from config, the single source of truth.
     if (method === 'GET' && campaign.active && route === campaign.landingPath) {
       return sendFile(res, path.join(PUBLIC_DIR, 'campaign.html'), 200);

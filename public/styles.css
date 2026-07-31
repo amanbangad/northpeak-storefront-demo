@@ -42,6 +42,27 @@ body {
 .nav a:hover { color: var(--brand); }
 
 .content { max-width: 1080px; margin: 24px auto; padding: 0 24px; display: flex; flex-direction: column; gap: 24px; }
+.content.shop { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 24px; }
+
+.hero {
+  background: linear-gradient(120deg, #1d2d50, #2e4372);
+  color: #fff;
+  padding: 42px 28px;
+  text-align: center;
+}
+.hero-kicker { text-transform: uppercase; letter-spacing: 2px; font-size: 12px; opacity: 0.8; margin: 0 0 6px; }
+.hero h2 { font-size: 40px; margin: 0 0 6px; letter-spacing: 1px; }
+.hero-claim { font-size: 19px; margin: 0 0 18px; color: #ffd9cb; font-weight: 600; }
+
+.cart-line { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; }
+.cart-line.deal { color: var(--good); }
+.cart-line.total { font-weight: 700; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; }
+.cart-summary { margin: 10px 0 14px; }
+
+.orders-list { display: flex; flex-direction: column; gap: 6px; }
+.order-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.mono { font-family: Consolas, monospace; }
 
 .panel {
   background: var(--card);
